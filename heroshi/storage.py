@@ -8,6 +8,7 @@ import random
 from heroshi.conf import settings
 from heroshi.misc import get_logger
 log = get_logger("storage")
+from heroshi.profile import profile
 
 
 class StorageConnection(object):
@@ -15,6 +16,7 @@ class StorageConnection(object):
         self._server = couchdb.Server(settings.storage['couchdb_url'])
         self._db = self._server[settings.storage['db_name']]
 
+    @profile('Storage.update')
     def save_content(self, doc, content, content_type):
         if doc.get('_attachments', {}).get("content", {}).get("length", -1) == len(content):
             log.debug(u"Skipping update with same length.")
@@ -40,6 +42,7 @@ class StorageConnection(object):
         except couchdb.RequestFailed:
             log.exception(u"save")
 
+    @profile('Storage.update')
     def update(self, items, raise_conflict=True, all_or_nothing=False, ensure_commit=False):
         try:
             update_results = self._db.bulk_save(items, use_uuids=False, all_or_nothing=all_or_nothing)
@@ -63,6 +66,7 @@ class StorageConnection(object):
         results = self.query_all_by_url(url=None, limit=1, key=url)
         return results[0] if results else None
 
+    @profile('Storage.query_new_random')
     def query_new_random(self, limit=None):
         return self._query_view("queue/new-random", limit, startkey=random.random(), stale='ok')
 

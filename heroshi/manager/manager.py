@@ -13,7 +13,7 @@ from heroshi.data import Cache
 from heroshi.conf import settings
 from heroshi.misc import get_logger, log_exceptions
 log = get_logger("manager")
-from heroshi.profile import Profile
+from heroshi.profile import profile
 from heroshi.storage import StorageConnection
 
 
@@ -35,6 +35,7 @@ class Manager(object):
         self.prefetch_thread.kill()
         self.postreport_thread.kill()
 
+    @profile
     def get_from_prefetch_queue(self, size):
         result = []
         while len(result) < size:
@@ -165,6 +166,7 @@ class Manager(object):
         return False
 
     @log_exceptions
+    @profile('API:report')
     def report_result(self, request):
         report = cjson.decode(request.body)
 
