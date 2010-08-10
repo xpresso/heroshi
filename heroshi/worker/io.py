@@ -47,7 +47,11 @@ class Worker(object):
         Returns `None` when `is_closed` returns True.
         """
         log.debug("fetch %s", url)
-        result = self.start_fetch(url)
+        result = self.results.get(url)
+        if result is not None:
+            log.debug("Reusing fetch-in-progress for %s.", url)
+        else:
+            result = self.start_fetch(url)
         # This sleep loop provides a way to stop on crawler close.
         while not result.ready():
             if self.is_closed():
@@ -62,12 +66,7 @@ class Worker(object):
         Actually it may block attempting to write a line to io-worker
         process, but this is a feature.
         """
-        out = self.results.get(url)
-        if out is not None:
-            log.debug("Reusing fetch-in-progress for %s.", url)
-            return out
-        else:
-            self.results[url] = out = Event()
+        self.results[url] = out = Event()
         _write(self.worker, url)
         return out
 
